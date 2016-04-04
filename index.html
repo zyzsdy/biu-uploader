@@ -1,0 +1,133 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Biu~Uploader</title>
+    <link rel="stylesheet" type="text/css" href="assest/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="assest/css/ripples.min.css">
+    <link rel="stylesheet" type="text/css" href="assest/css/bootstrap-material-design.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+<body>
+    <!--modal-->
+    <div class="modal fade" id="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modal-title">信息</h4>
+                </div>
+                <div class="modal-body" id="modal-content">
+                    <p>Biu~uploader/p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="modal-closebtn">关闭</button>
+                    <button type="button" class="btn btn-danger" id="modal-okbtn">确定</button>
+                    <button type="button" class="btn" data-dismiss="modal" id="modal-cancelbtn">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--navbar-->
+    <div class="titlespace navbar navbar-fixed-top">
+        <div class="container">
+            <div class="pull-left">
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" value="all" id="select-all"> 全选
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <img src="img/logo.svg" height="70">~Uploder
+            <div class="pull-right">
+                <button class="btn btn-info btn-raised" id="upload-selected">上传选中</button>
+                <button class="btn btn-danger btn-raised" id="delete-selected">删除</button>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid p-listwrap">
+        <div class="p-musiclist" id="musiclist">
+            <div v-for="item in filelist">
+                <div class="row-fluid well p-musicitem">
+                    <div class="col-xs-1 p-checkbox">
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" value="{{ item.id }}" v-model="item.checked">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-11">
+                        <div class="row">
+                            <div class="col-xs-2 p-filename">{{ item.filename }}</div>
+                            <div class="col-xs-2">
+                                <div class="form-group label-floating">
+                                    <label class="control-label">曲名</label>
+                                    <input type="text" class="form-control" v-model="item.title">
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <div class="form-group label-floating">
+                                    <label class="control-label">歌手</label>
+                                    <input type="text" class="form-control" v-model="item.artist">
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <div class="form-group label-floating">
+                                    <label class="control-label">专辑</label>
+                                    <input type="text" class="form-control" v-model="item.album">
+                                </div>
+                            </div>
+                            <div class="col-xs-2">
+                                <div class="form-group label-floating">
+                                    <label class="control-label">备注</label>
+                                    <input type="text" class="form-control" v-model="item.remark">
+                                </div>
+                            </div>
+                            <div class="col-xs-2 p-operate">
+                                <button class="btn btn-info btn-raised {{ item.status | filestatusclass }} p-startbutton" data-id="{{ item.id }}">{{ item.status }}</button>
+                                <a data-id="{{ item.id }}" class="p-deletetext">删除</a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-10 progress progress-striped active">
+                                <div class="progress-bar {{ item.status | progressbarclass }}" v-bind:style="{width: (100*item.uploadedSize/item.size)+'%'}"></div>
+                            </div>
+                            <div class="col-xs-2">
+                                {{ item.uploadedSize | percentformat item.size }} {{ item.speed | sizeformat }}/s {{ item.size | sizeformat }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="p-info pull-right">{{ item.info }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row-fluid emptylist" id="file-selector">
+                <div id="emptyinfo">
+                    点此选择文件，或者拖进来
+                </div>
+            </div>
+            <input type="file" id="file-input" style="display: none" multiple="multiple">
+        </div>
+    </div>
+    <!--scripts-->
+    <script type="text/javascript" src="assest/js/jquery.min.js"></script>
+    <script type="text/javascript" src="assest/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="assest/js/material.min.js"></script>
+    <script type="text/javascript" src="assest/js/ripples.min.js"></script>
+    <script type="text/javascript" src="assest/js/vue.min.js"></script>
+    <script type="text/javascript" src="assest/js/spark-md5.min.js"></script>
+    <script type="text/javascript" src="src/crc32.js"></script>
+    <script type="text/javascript" src="src/util.js"></script>
+    <script type="text/javascript" src="src/file.js"></script>
+    <script type="text/javascript" src="src/main.js"></script>
+</body>
+
+</html>

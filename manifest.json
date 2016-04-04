@@ -1,0 +1,28 @@
+{
+    "name": "BiuUploader",
+    "version": "1.0.1.59",
+    "manifest_version": 2,
+    "description": "带有多选文件和断点续传功能的Biu.moe上传器。",
+    "icons": {
+        "16": "img/icon16.png",
+        "48": "img/icon48.png",
+        "128": "img/icon128.png"
+    },
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_title": "点击开始上传到Biu~"
+    },
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "tabs",
+        "storage",
+        "http://biu.moe/",
+        "https://biu.moe/",
+        "http://*.biu.moe/",
+        "https://*.biu.moe/"
+    ]
+}

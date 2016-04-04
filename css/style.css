@@ -1,0 +1,80 @@
+body{
+    font-family: "微软雅黑";
+    -webkit-user-select: none;
+}
+/*滚动条*/
+::-webkit-scrollbar {  
+    width: 8px;
+    transition: all .2s;
+}
+::-webkit-scrollbar-thumb {  
+    border-radius: 10px;  
+    background: rgba(0,0,0,0.2);   
+}  
+::-webkit-scrollbar-thumb:window-inactive {  
+    background: rgba(0,0,0,0.1);   
+}  
+::-webkit-scrollbar-thumb:vertical:hover{  
+    background-color: rgba(0,0,0,0.3);  
+}
+::-webkit-scrollbar-thumb:vertical:active{  
+    background-color: rgba(0,0,0,0.7);  
+}
+/*Main Frame*/
+.titlespace{
+    height: 85px;
+    background-color: #EEE;
+    overflow: hidden;
+}
+.titlespace>.container{
+    text-align: center;
+    font-size: 30px;
+    line-height: 40px;
+    padding-top: 10px;
+    color: #0e90d2;
+    font-weight: bold;
+}
+.p-listwrap{
+    margin-top: 90px;
+}
+.p-musiclist>div{
+    margin: 10px;
+    min-height: 150px;
+    border-radius: 10px;
+}
+.p-musicitem{
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: hidden;
+}
+.p-checkbox{
+    padding-top: 10px;
+    width: 50px;
+}
+.p-filename{
+    height: 100px;
+    padding-top: 40px;
+}
+.p-musiclist>.emptylist{
+    text-align: center;
+    padding-top: 65px;
+    cursor: pointer;   
+}
+.p-musiclist>.emptylist:hover{
+    background-color: #DDD;
+}
+.p-operate{
+    padding-top: 20px;
+}
+.p-deletetext,.p-deletetext:hover,.p-deletetext:focus{
+    color: red;
+    cursor: pointer;
+}
+.progress{
+    padding: 0;
+    margin: 5px 0 0 0;
+    height: 10px;
+}
+.p-info{
+    padding-right: 30px;
+}
