@@ -79,6 +79,10 @@ $(function() {
     $("#upload-selected").click(function() {
         clickStart(fileProvider.getSelected());
     });
+    //批量更新信息
+    $("#info-selected").click(function() {
+        multiinfo(fileProvider.getSelected());
+    });
     //读取设置文件
     window.biu_config = config;
     config.load();
@@ -113,4 +117,25 @@ function showAbout() {
     mainContent.append($("<hr>"));
 
     modal(mainContent, "关于");
+}
+
+//批量添加信息
+function multiinfo(ids){
+    if (ids.length <= 0) {
+        modal("请选中需要更新信息的文件。", "批量更新信息");
+    } else {
+        var innerTpl = $("#xtpl-mi").html();
+        modal(innerTpl, "批量更新信息", {
+            type: "okcancel",
+            oncreated: function(){
+                new Vue({
+                    el: "#mi-dis",
+                    data: fileProvider.infodata
+                });
+            },
+            callback: function(){
+                fileProvider.setInfo(ids);
+            }
+        });
+    }
 }

@@ -7,6 +7,11 @@
     <link rel="stylesheet" type="text/css" href="assest/css/ripples.min.css">
     <link rel="stylesheet" type="text/css" href="assest/css/bootstrap-material-design.min.css">
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script type="text/javascript" src="assest/js/jquery.min.js"></script>
+    <script type="text/javascript" src="assest/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="assest/js/material.min.js"></script>
+    <script type="text/javascript" src="assest/js/ripples.min.js"></script>
+    <script type="text/javascript" src="assest/js/vue.min.js"></script>
 </head>
 
 <body>
@@ -43,6 +48,7 @@
             </div>
             <img src="img/logo.svg" height="70">~Uploder
             <div class="pull-right">
+                <button class="btn btn-info btn-raised" id="info-selected">批量填写信息</button>
                 <button class="btn btn-info btn-raised" id="upload-selected">上传选中</button>
                 <button class="btn btn-danger btn-raised" id="delete-selected">删除</button>
             </div>
@@ -62,35 +68,62 @@
                         </div>
                     </div>
                     <div class="col-xs-11">
+                        <div class="row p-filename">源文件名： {{ item.filename }} &nbsp;&nbsp;&nbsp; {{{ item.info2 }}}</div>
                         <div class="row">
-                            <div class="col-xs-2 p-filename">{{ item.filename }}</div>
-                            <div class="col-xs-2">
-                                <div class="form-group label-floating">
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
                                     <label class="control-label">曲名</label>
                                     <input type="text" class="form-control" v-model="item.title">
                                 </div>
                             </div>
-                            <div class="col-xs-2">
-                                <div class="form-group label-floating">
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
                                     <label class="control-label">歌手</label>
                                     <input type="text" class="form-control" v-model="item.artist">
                                 </div>
                             </div>
-                            <div class="col-xs-2">
-                                <div class="form-group label-floating">
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
                                     <label class="control-label">专辑</label>
                                     <input type="text" class="form-control" v-model="item.album">
-                                </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group label-floating">
-                                    <label class="control-label">备注</label>
-                                    <input type="text" class="form-control" v-model="item.remark">
                                 </div>
                             </div>
                             <div class="col-xs-2 p-operate">
                                 <button class="btn btn-info btn-raised {{ item.status | filestatusclass }} p-startbutton" data-id="{{ item.id }}">{{ item.status }}</button>
                                 <a data-id="{{ item.id }}" class="p-deletetext">删除</a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
+                                    <label class="control-label">备注</label>
+                                    <input type="text" class="form-control" v-model="item.remark">
+                                </div>
+                            </div>
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
+                                    <label class="control-label">分类1</label>
+                                    <select class="form-control" v-model="item.type1">
+                                        <option value="1">动画</option>
+                                        <option value="2">Galgame</option>
+                                        <option value="3">偶像</option>
+                                        <option value="4">东方</option>
+                                        <option value="5">V家</option>
+                                        <option value="6">同人</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-xs-3">
+                                <div class="form-group label-static">
+                                    <label class="control-label">分类2</label>
+                                    <select class="form-control" v-model="item.type2">
+                                        <option value="1">原唱</option>
+                                        <option value="2">伴奏</option>
+                                        <option value="3">纯音乐</option>
+                                        <option value="4">翻唱</option>
+                                        <option value="5">其他</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -103,6 +136,24 @@
                         </div>
                         <div class="row">
                             <span class="p-info pull-right">{{ item.info }}</span>
+                        </div>
+                        <div class="row" v-if="item.isdup">
+                            <div class="dup-items">
+                                <table class="table table-striped table-hover table-condensed">
+                                    <tr>
+                                        <th>SID</th>
+                                        <th>曲名</th>
+                                        <th>歌手</th>
+                                        <th>专辑</th>
+                                    </tr>
+                                    <tr v-for="dupm in item.dupresult">
+                                        <td><a href="http://biu.moe/fm#!{{ dupm.sid }}" target="_blank">{{ dupm.sid }}</a></td>
+                                        <td>{{ dupm.title }}</td>
+                                        <td>{{ dupm.singer }}</td>
+                                        <td>{{ dupm.album }}</td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -117,12 +168,56 @@
             <input type="file" id="file-input" style="display: none" multiple="multiple">
         </div>
     </div>
+    <!--template-->
+    <script type="x-template" id="xtpl-mi">
+        <div id="mi-dis">
+            <div class="form-group label-static">
+                <label class="control-label">曲名</label>
+                <input type="text" class="form-control" v-model="title">
+            </div>
+            <div class="form-group label-static">
+                <label class="control-label">歌手</label>
+                <input type="text" class="form-control" v-model="artist">
+            </div>
+            <div class="form-group label-static">
+                <label class="control-label">专辑</label>
+                <input type="text" class="form-control" v-model="album">
+            </div>
+            <div class="form-group label-static">
+                <label class="control-label">备注</label>
+                <input type="text" class="form-control" v-model="remark">
+            </div>
+            <div class="form-group label-static">
+                <label class="control-label">分类1</label>
+                <select class="form-control" v-model="type1">
+                    <option value="0">不修改</option>
+                    <option value="1">动画</option>
+                    <option value="2">Galgame</option>
+                    <option value="3">偶像</option>
+                    <option value="4">东方</option>
+                    <option value="5">V家</option>
+                    <option value="6">同人</option>
+                </select>
+            </div>
+            <div class="form-group label-static">
+                <label class="control-label">分类2</label>
+                <select class="form-control" v-model="type2">
+                    <option value="0">不修改</option>
+                    <option value="1">原唱</option>
+                    <option value="2">伴奏</option>
+                    <option value="3">纯音乐</option>
+                    <option value="4">翻唱</option>
+                    <option value="5">其他</option>
+                </select>
+            </div>
+        </div>
+    </script>
     <!--scripts-->
-    <script type="text/javascript" src="assest/js/jquery.min.js"></script>
-    <script type="text/javascript" src="assest/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="assest/js/material.min.js"></script>
-    <script type="text/javascript" src="assest/js/ripples.min.js"></script>
-    <script type="text/javascript" src="assest/js/vue.min.js"></script>
+    <script type="text/javascript" src="assest/js/aurora.js"></script>
+    <script type="text/javascript" src="assest/js/mp3.js"></script>
+    <script type="text/javascript" src="assest/js/alac.js"></script>
+    <script type="text/javascript" src="assest/js/flac.js"></script>
+    <script type="text/javascript" src="assest/js/aac.js"></script>
     <script type="text/javascript" src="assest/js/spark-md5.min.js"></script>
     <script type="text/javascript" src="src/crc32.js"></script>
     <script type="text/javascript" src="src/util.js"></script>

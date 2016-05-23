@@ -22,6 +22,20 @@ function formatSize(size) {
     }
 }
 
+function formatSizeThousand(size) {
+    if (size <= 1000) {
+        return size.toFixed(2) + "b";
+    } else if (size <= 1000000) {
+        return (size / 1000).toFixed(2) + "Kb";
+    } else if (size <= 1000000000) {
+        return (size / 1000000).toFixed(2) + "Mb";
+    } else if (size <= 1000000000000) {
+        return (size / 1000000000).toFixed(2) + "Gb";
+    } else {
+        return (size / 1000000000000).toFixed(2) + "Tb";
+    }
+}
+
 //状态 -> 按钮颜色类
 function fileStatusClass(fileStatus) {
     switch (fileStatus) {
@@ -66,7 +80,8 @@ function percentFormat(value, total) {
 function modal(content, title, option) {
     option = option || {};
     var suicide = option.suicide || false;
-    var callback = option.callback || function() { }
+    var oncreated = option.oncreated || function () { };
+    var callback = option.callback || function () { };
 
     $("#modal-content").html(content);
     $("#modal-title").html(title);
@@ -75,8 +90,8 @@ function modal(content, title, option) {
         $("#modal-closebtn").hide();
         $("#modal-okbtn").show();
         $("#modal-cancelbtn").show();
-        $("#modal-okbtn").on("click", function() {
-            callback();
+        $("#modal-okbtn").on("click", function () {
+            if (callback() === false) return false;
             $("#modal-okbtn").unbind();
             $("#modal").modal('hide');
         })
@@ -84,7 +99,7 @@ function modal(content, title, option) {
         $("#modal-closebtn").hide();
         $("#modal-okbtn").show();
         $("#modal-cancelbtn").hide();
-        $("#modal-okbtn").on("click", function() {
+        $("#modal-okbtn").on("click", function () {
             if (callback() === false) return false;
             $("#modal-okbtn").unbind();
             $("#modal").modal('hide');
@@ -96,12 +111,13 @@ function modal(content, title, option) {
     }
 
     $("#modal").modal();
-    $("#modal").on("hidden.bs.modal", function() {
+    $("#modal").on("hidden.bs.modal", function () {
         $("#modal-okbtn").unbind();
         if (suicide) {
             callback();
         }
-    })
+    });
+    oncreated();
 }
 
 //设置

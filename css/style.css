@@ -39,7 +39,7 @@ body{
 }
 .p-musiclist>div{
     margin: 10px;
-    min-height: 150px;
+    min-height: 200px;
     border-radius: 10px;
 }
 .p-musicitem{
@@ -52,8 +52,8 @@ body{
     width: 50px;
 }
 .p-filename{
-    height: 100px;
-    padding-top: 40px;
+    padding-top: 10px;
+    padding-left: 15px;
 }
 .p-musiclist>.emptylist{
     text-align: center;
@@ -78,3 +78,4 @@ body{
 .p-info{
     padding-right: 30px;
 }
+

@@ -1,7 +1,10 @@
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
     if (changeinfo.status == "complete") {
-        if (/biu\.moe/.test(tab.url)) {
+        if (/biu\.moe\/[^f]/.test(tab.url)) {
             chrome.tabs.executeScript(null, { file: "uploadtool.js" });
+        }
+        if (/biu\.moe\/fm/.test(tab.url)) {
+            chrome.tabs.executeScript(null, { file: "tools/fmvolume.js" });
         }
     }
 });

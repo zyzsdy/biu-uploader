@@ -11,32 +11,101 @@ class File {
         this.uploadedSize = file.size;
         this.speed = 0;
         this.info = "文件已添加";
+        this.info2 = "等待分析";
+        this.type1 = this.type2 = "0";
+        this.album = this.artist = this.title = this.remark = "";
+        this.isdup = false;
+        this.dupresult = null;
         this.prepare();
     }
     prepare() {
         var self = this;
-        var md5Promise = this.calcMd5();
-
-        Promise.all([md5Promise]).then(function(data) {
-            self.md5 = data[0][0];
-            self.crc32 = data[0][1];
+        this.calcMd5().then(function(data){
+            self.md5 = data[0];
+            self.crc32 = data[1];
             self.status = FileStatus.READY;
             self.info = "上传准备完成。";
-        })
+        });
+        this.calcId3().then(function(data){
+            var songinfo = data;
+            if(!songinfo){
+                self.info2 = "获取信息失败，请手工填入信息。";
+            }else{
+                self.info2 = "获取信息成功。格式：" + songinfo.format.formatID;
+                self.__showMetaInfo = true;
+                if(!songinfo.metadata){
+                    self.info2 = self.info2 + " ID3信息获取失败，请手工填入信息。";
+                }else{
+                    self.album = songinfo.metadata.album;
+                    self.title = songinfo.metadata.title;
+                    self.artist = songinfo.metadata.artist;
+                }
+                if(songinfo.format.formatID == "mp3"){
+                    self.info2 = self.info2 + " 比特率：" + formatSizeThousand(songinfo.format.bitrate);
+                    if(songinfo.format.bitrate < 300000){
+                        self.info2 = '<span style="color: red">MP3格式的比特率太低，请选择高音质文件上传！</span> ' + self.info2;
+                    }
+                }
+            }
+        });
+    }
+    calcId3() {
+        //这段代码是空空写的
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            var object = new AV.Asset.fromFile(self.file);
+            object.on('buffer', function (percent) {
+                if (percent === 100) {
+                    resolve(false); // 无论有没有读到信息 读到尾了都返回
+                } else {
+                    if(!self.__showMetaInfo) self.info2 = "获取信息： " + percent + "%";
+                }
+            });
+            var info = {};
+            var promises = ['format', 'metadata'].map(function (i) {
+                return new Promise(function (resolve, reject) {
+                    try {
+                        object.once(i, function (data) {
+                            info[i] = data;
+                            resolve();
+                        });
+                    } catch (err) {
+                        reject(err);
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                    resolve(false);
+                });
+            });
+            Promise.all(promises).then(function () {
+                object.stop();
+                //loadedInfoPile.push(file);
+                resolve(info);
+            }).catch(function (err) {
+                console.log(err);
+                resolve(false);
+            });
+            
+            try{
+                object.start();
+            } catch (err) {
+                console.log(err);
+            }
+        });
     }
     calcMd5() {
         this.info = "正在计算MD5。。。";
         var file = this.file;
         var self = this;
 
-        return new Promise(function(res, rej) {
+        return new Promise(function (res, rej) {
             var chunkSize = 2097152; //2MB分割为一块
             var chunks = Math.ceil(file.size / chunkSize);
             var currentChunk = 0;
             var spark = new SparkMD5.ArrayBuffer();
             var crc32 = new Crc32();
             var fileReader = new FileReader();
-            fileReader.onload = function(e) {
+            fileReader.onload = function (e) {
                 spark.append(e.target.result);
                 crc32.update(e.target.result);
 
@@ -51,7 +120,7 @@ class File {
                     res([spark.end(), crc32.digest(10)]);
                 }
             };
-            fileReader.onerror = function() {
+            fileReader.onerror = function () {
                 self.info = "MD5计算出错";
                 self.status = FileStatus.ERROR;
             };
@@ -89,7 +158,8 @@ class File {
                 if (this.__forceSign) {
                     modal("疑似撞车，需要强行上传么？", "撞车确认", {
                         type: "okcancel",
-                        callback: function() {
+                        callback: function () {
+                            self.isdup = false;
                             self.startUpload(true);
                         }
                     })
@@ -117,7 +187,7 @@ class File {
             window.biu_config.init("用户信息不完整。");
             return;
         }
-        if (!(this.title && this.title.length > 0 && this.artist && this.artist.length > 0 && this.album && this.album.length > 0)) {
+        if (!(this.title && this.title.length > 0 && this.artist && this.artist.length > 0 && this.album && this.album.length > 0 && this.type1 != "0" && this.type2 != "0")) {
             modal("请完整填写歌曲信息。", "歌曲信息不完整");
             this.info = "歌曲信息不完整，请补充完整后再上传。";
             this.status = FileStatus.READY;
@@ -133,13 +203,15 @@ class File {
             "singer": this.artist,
             "album": this.album,
             "remark": this.remark,
+            "type1": this.type1,
+            "type2": this.type2,
             "sign": sign
         }
         if (force) {
             para["force"] = 1;
         }
         //获得API
-        $.post(apiUrl, para, function(data) {
+        $.post(apiUrl, para, function (data) {
             data = JSON.parse(data);
             if (data.success) {
                 self.token = data.token;
@@ -150,7 +222,9 @@ class File {
                     switch (data.error_code) {
                         case 1: self.info = "签名校验失败，请按F2重新填写用户信息。"; break;
                         case 2:
-                            self.info = "可能撞车。请返回网站搜索，如果确认没撞车请点击上面按钮强行上传。";
+                            self.info = "可能撞车。如果确认没撞车请点击上面按钮强行上传。";
+                            self.isdup = true;
+                            self.dupresult = data.result;
                             self.__forceSign = true;
                             break;
                         case 3: self.info = "上传的歌曲太多了，请等等管理员审核或者自己放弃一些。"; break;
@@ -158,6 +232,7 @@ class File {
                         case 5: self.info = "撞MD5，如果你确认你确实没撞车请联系小新。"; break;
                         case 6: self.info = "数据库服务器异常。"; break;
                         case 7: self.info = "上传功能被关闭。"; break;
+                        case 8: self.info = "分类错误。请选择正确的分类"; break;
                         default: self.info = "Something happened."; break;
                     }
                 } else {
@@ -195,7 +270,7 @@ class File {
         formData.append('crc32', this.crc32);
         this.__xhr = $.ajax({
             url: "http://upload.qiniu.com/",
-            xhr: function() {
+            xhr: function () {
                 var xhr = $.ajaxSettings.xhr();
                 xhr.upload.addEventListener('progress', showprogress, false);
                 return xhr;
@@ -204,11 +279,11 @@ class File {
             data: formData,
             processData: false,
             type: 'POST',
-            success: function(data) {
+            success: function (data) {
                 self.status = FileStatus.FINISHED;
                 self.info = "上传成功！";
             },
-            error: function(xhr, error, obj) {
+            error: function (xhr, error, obj) {
                 try {
                     var data = JSON.parse(xhr.responseText);
                     self.status = FileStatus.ERROR;
@@ -237,7 +312,7 @@ class File {
         if (this.__uploadType == "direct") {
             modal("现在为直接上传模式，这样做会取消上传。仍然继续么？", "取消上传？", {
                 type: "okcancel",
-                callback: function() {
+                callback: function () {
                     self.__xhr.abort();
                     self.status = FileStatus.READY;
                     self.info = "用户取消上传。";
@@ -281,7 +356,7 @@ class File {
         //Crc32计算
         this.__blockCrc32 = new Crc32();
         this.__blockfileReader = new FileReader();
-        this.__blockfileReader.onload = function(e) {
+        this.__blockfileReader.onload = function (e) {
             self.__blockCrc32.update(e.target.result);
         }
         //文件分割
@@ -295,7 +370,7 @@ class File {
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Authorization", "UpToken " + self.token);
         xhr.setRequestHeader("Content-Type", "application/octet-stream");
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
@@ -355,7 +430,7 @@ class File {
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Authorization", "UpToken " + self.token);
         xhr.setRequestHeader("Content-Type", "application/octet-stream");
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
@@ -409,7 +484,7 @@ class File {
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Authorization", "UpToken " + this.token);
         xhr.setRequestHeader("Content-Type", "text/plain");
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
                     self.status = FileStatus.FINISHED;
@@ -442,6 +517,14 @@ const FileStatus = {
 class FileProvider {
     constructor() {
         this.filelist = [];
+        this.infodata = {
+            title: "",
+            artist: "",
+            album: "",
+            remark: "",
+            type1: "0",
+            type2: "0"
+        }
         this.idgen = idGenerator();
     }
     //添加文件
@@ -458,6 +541,24 @@ class FileProvider {
             for (var i = 0; i < this.filelist.length; i++) {
                 if (this.filelist[i].id == id) {
                     this.filelist.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+    //设置信息
+    setInfo(ids){
+        for (var ididx in ids){
+            var id = ids[ididx];
+            for (var i = 0; i < this.filelist.length; i++) {
+                if (this.filelist[i].id == id) {
+                    var tfile = this.filelist[i];
+                    if(this.infodata.title != "") tfile.title = this.infodata.title;
+                    if(this.infodata.artist != "") tfile.artist = this.infodata.artist;
+                    if(this.infodata.album != "") tfile.album = this.infodata.album;
+                    if(this.infodata.remark != "") tfile.remark = this.infodata.remark;
+                    if(this.infodata.type1 != "0") tfile.type1 = this.infodata.type1;
+                    if(this.infodata.type2 != "0") tfile.type2 = this.infodata.type2;
                     break;
                 }
             }
